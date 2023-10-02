@@ -89,7 +89,7 @@ class Producer(object):
 
 async def main():
     producer = Producer(
-        topic=BITSTAMP_TOPIC,
+        topic=KAFKA_TOPIC,
         bootstrap_servers=f"{KAFKA_HOST}:{KAFKA_PORT}",
     )
     app = App()
