@@ -1,59 +1,47 @@
 version: "3.0"
 services:
-    mongodb:
-        container_name: mongodb
-        image: mongo # use the latest image.
-        restart: always
-        environment: # set required env variables to access mongo
-            MONGO_INITDB_ROOT_USERNAME: mongo
-            MONGO_INITDB_ROOT_PASSWORD: mongo
-        ports:
-            - 27017:27017
-        # volumes: # optional to preserve database after container is deleted.
-        #   - ./database-data:/data/db
-        networks:
-            - custom
-
-    # Mongo Express Service
-    mongo-express:
-        container_name: mongo-express
-        image: mongo-express # latest image
-        restart: always
-        ports:
-            - 8081:8081
+    zookeeper:
+        container_name: lab1-zookeeper
+        image: confluentinc/cp-zookeeper:latest
         environment:
-            ME_CONFIG_MONGODB_ADMINUSERNAME: mongo
-            ME_CONFIG_MONGODB_ADMINPASSWORD: mongo
-            ME_CONFIG_MONGODB_SERVER: mongodb
-            # use the name of the mongo container above for server env var.
-            # In our case this is mongodb
+            ZOOKEEPER_CLIENT_PORT: 2181
+            ZOOKEEPER_TICK_TIME: 2000
+        ports:
+            - 22181:2181
         networks:
             - custom
 
-    postgres:
-        container_name: "postgres"
-        image: postgres:14.1-alpine
-        restart: always
-        environment:
-            - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=postgres
-            - POSTGRES_DB=postgres
-        ports:
-            - "5432:5432"
-        networks:
-            - custom
-
-    pgadmin:
-        container_name: pgadmin4_container
-        image: dpage/pgadmin4
-        restart: always
-        ports:
-            - "5050:80"
+    kafka:
+        container_name: lab1-kafka
+        image: confluentinc/cp-kafka:latest
         depends_on:
-            - postgres
+            - zookeeper
+        ports:
+            - 29092:29092
+        hostname: kafka
         environment:
-            PGADMIN_DEFAULT_EMAIL: admin@admin.com
-            PGADMIN_DEFAULT_PASSWORD: root
+            KAFKA_BROKER_ID: 1
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:29092
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+            KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+        networks:
+            - custom
+
+    kafka-ui:
+        container_name: lab1-kafka-ui
+        image: provectuslabs/kafka-ui
+        ports:
+            - 8090:8080
+        restart: always
+        environment:
+            - KAFKA_CLUSTERS_0_NAME=local
+            - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092
+            - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
+        links:
+            - kafka
+            - zookeeper
         networks:
             - custom
 networks:
