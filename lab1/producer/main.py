@@ -1,7 +1,6 @@
 import asyncio
 import json
 
-# from websockets.sync.client import connect
 from websockets.client import connect
 import time
 
@@ -40,12 +39,11 @@ class App(object):
             return
         raise SubscribeFailed(f"cannot subscribe to chanel {channel}")
 
-    async def run_customer_receiver(self, websocket, callback):
+    async def run_consumer_receiver(self, websocket, callback):
         while True:
             raw_message = await websocket.recv()
             message = json.loads(raw_message)
-            # print("lol")
-            # print(f"Message: {message}")
+
             await callback(message)
 
     async def run(self, channel, message_receiver_callback):
@@ -57,7 +55,7 @@ class App(object):
             subscribe_received_message = await websocket.recv()
             self.check_is_subscribe_correct(channel, subscribe_received_message)
 
-            await self.run_customer_receiver(websocket, message_receiver_callback)
+            await self.run_consumer_receiver(websocket, message_receiver_callback)
 
     def create_task(self, channel, message_receiver):
         task = self.loop.create_task(self.run(channel, message_receiver))
@@ -91,22 +89,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-# {
-#     "data": {
-#         "id": 1668878635663360,
-#         "id_str": "1668878635663360",
-#         "order_type": 0,
-#         "datetime": "1696276048",
-#         "microtimestamp": "1696276047931000",
-#         "amount": 0.00179676,
-#         "amount_str": "0.00179676",
-#         "amount_traded": "0",
-#         "amount_at_create": "0.00179676",
-#         "price": 27825,
-#         "price_str": "27825",
-#     },
-#     "channel": "live_orders_btcusd",
-#     "event": "order_deleted",
-# }
