@@ -2,7 +2,7 @@ import asyncio
 import json
 
 from websockets.client import connect
-import time
+from kafka import KafkaProducer
 
 from config import *
 
@@ -74,15 +74,30 @@ class App(object):
             task.cancel()
 
 
-async def process_message(message):
-    # await asyncio.sleep(0.001)
-    print(f"Message: {message}")
+class Producer(object):
+    DEFAULT_SETTINGS = {
+        "value_serializer": lambda v: json.dumps(v).encode("utf-8"),
+    }
+
+    def __init__(self, topic, **kwargs):
+        self.topic = topic
+        self.producer = KafkaProducer(**self.DEFAULT_SETTINGS, **kwargs)
+
+    async def send_message(self, message):
+        self.producer.send(self.topic, message)
 
 
 async def main():
+    producer = Producer(
+        topic=BITSTAMP_TOPIC,
+        bootstrap_servers=f"{KAFKA_HOST}:{KAFKA_PORT}",
+    )
     app = App()
 
-    task = app.create_task(channel=BITSTAMP_CHANNEL, message_receiver=process_message)
+    task = app.create_task(
+        channel=BITSTAMP_CHANNEL,
+        message_receiver=producer.send_message,
+    )
     await asyncio.sleep(5)
     app.stop_task(task)
 
