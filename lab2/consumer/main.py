@@ -1,9 +1,25 @@
 import json
+from enum import Enum, EnumMeta
 
 from pydantic import BaseModel
 from kafka import KafkaConsumer
 
 from config import *
+
+
+class MetaEnum(EnumMeta):
+    def __contains__(cls, item):
+        try:
+            cls(item)
+        except ValueError:
+            return False
+        return True
+
+
+class OrdersEvents(str, Enum, metaclass=MetaEnum):
+    ORDER_CREATED = "order_created"
+    ORDER_CHANGED = "order_changed"
+    ORDER_DELETED = "order_deleted"
 
 
 class OrderData(BaseModel):
@@ -60,6 +76,10 @@ class App(object):
         )
 
     def process_message(self, message: dict):
+        event = message.get("event", None)
+        if event not in OrdersEvents:
+            return
+
         order = Order.parse_obj(message)
 
         if order.event not in self.best_orders:
