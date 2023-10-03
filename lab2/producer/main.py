@@ -2,7 +2,7 @@ import asyncio
 import json
 
 from websockets.client import connect
-from kafka import KafkaProducer
+from aiokafka import AIOKafkaProducer
 
 from config import *
 
@@ -20,6 +20,7 @@ class App(object):
 
     def __init__(self, loop=None):
         self.loop = loop or asyncio.get_event_loop()
+        self.loop.set_exception_handler(print)
         self.tasks = []
 
     def get_subscribe_request_data(self, channel):
@@ -81,10 +82,22 @@ class Producer(object):
 
     def __init__(self, topic, **kwargs):
         self.topic = topic
-        self.producer = KafkaProducer(**self.DEFAULT_SETTINGS, **kwargs)
+        self.producer = AIOKafkaProducer(**self.DEFAULT_SETTINGS, **kwargs)
 
     async def send_message(self, message):
-        self.producer.send(self.topic, message)
+        await self.producer.send_and_wait(self.topic, message)
+
+    async def start(self):
+        await self.producer.start()
+
+    async def stop(self):
+        await self.producer.stop()
+
+    async def __aenter__(self):
+        await self.start()
+
+    async def __aexit__(self, exc_type, exc_value, exc_traceback):
+        await self.stop()
 
 
 async def main():
@@ -94,11 +107,13 @@ async def main():
     )
     app = App()
 
-    task = app.create_task(
-        channel=BITSTAMP_CHANNEL,
-        message_receiver=producer.send_message,
-    )
-    await asyncio.sleep(5)
+    async with producer:
+        task = app.create_task(
+            channel=BITSTAMP_CHANNEL,
+            message_receiver=producer.send_message,
+        )
+        await asyncio.sleep(5)
+
     app.stop_task(task)
 
 
