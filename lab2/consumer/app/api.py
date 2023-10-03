@@ -1,30 +1,37 @@
+from enum import Enum
+
 from fastapi import WebSocket, Request, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.routing import APIRouter
 
-# import config
-# from config import templates
-# from services.utils import get_all_nodes_hosts, collect_url
-# from services.websocket_manager import ws_manager
-# from services import nodes_api
-# from services.lamport_clock import lamport_clock
-# from apps.models import Message, Mail, ControlMessage, ActiveNode, ActiveNodes
-
+from config import *
+from services.websocket_manager import ConnectionManager
 
 router = APIRouter()
-# url_by_name = {}
+ws_manager = ConnectionManager()
+
+
+class OrdersEvents(Enum):
+    ORDER_CREATED = "order_created"
+    ORDER_CHANGED = "order_changed"
+    ORDER_DELETED = "order_deleted"
 
 
 @router.get("/", response_class=HTMLResponse)
 async def read_item(request: Request):
-    # all_nodes = get_all_nodes_hosts()
+    context = {
+        "request": request,
+        "HOST": SERVER_HOST,
+        "PORT": SERVER_PORT,
+    }
+    return templates.TemplateResponse("index.html", context=context)
 
-    # active_nodes = await nodes_api.get_active_nodes(all_nodes)
-    # active_nodes_names = await nodes_api.get_nodes_names(active_nodes)
 
-    # # FIXME:
-    # global url_by_name
-    # url_by_name = active_nodes_names
+@router.get("/get_categories")
+async def read_item(request: Request):
+    return {
+        "categories": list(map(lambda x: x.value, OrdersEvents._member_map_.values()))
+    }
 
 
 @router.websocket("/ws")

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+        />
+        <title>Consumer UI</title>
+    </head>
+    <body>
+        <header class="header"></header>
+        <div id="content"></div>
+    </body>
+    <script>
+        const ws = new WebSocket(`ws://${location.host}/ws`, "echo-protocol");
+        const server_url = `http://${location.host}/`;
+
+        const getJSON = async (url) => {
+            try {
+                const response = await fetch(url, { method: "GET" });
+
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        };
+
+        const Order = (orderData) => {
+            const self = document.createElement("li");
+            self.innerHTML = orderData.data.price;
+            return self;
+        };
+
+        const ListOfOrders = () => {
+            const self = document.createElement("ul");
+
+            self.uploadOrders = (orders) => {
+                self.innerHTML = "";
+
+                orders.forEach((orderData) => {
+                    self.appendChild(Order(orderData));
+                });
+            };
+
+            return self;
+        };
+
+        const CategoryComponent = (category) => {
+            const self = document.createElement("div", {
+                id: category,
+            });
+            self.innerHTML = category;
+            self.listOfOrders = ListOfOrders();
+            self.appendChild(self.listOfOrders);
+            return self;
+        };
+
+        let categories;
+        const contentElem = document.getElementById("content");
+        let categoriesElements = [];
+        const init_content = async () => {
+            const response = await getJSON(`${server_url}get_categories`).catch(
+                (e) => {
+                    return { categories: [] };
+                },
+            );
+            categories = response.categories;
+
+            categoriesElements = [];
+            contentElem.innerHTML = "";
+
+            categories.forEach((category) => {
+                const new_node = CategoryComponent(category);
+
+                categoriesElements.push(new_node);
+            });
+            categoriesElements.forEach((category) => {
+                contentElem.appendChild(category);
+            });
+        };
+
+        init_content();
+
+        ws.onmessage = function (event) {
+            data = JSON.parse(event.data);
+
+            for (let i = 0; i < categories.length; i++) {
+                const category = categories[i];
+                const orders = data[category];
+                contentElem.childNodes[i].listOfOrders.uploadOrders(orders);
+            }
+        };
+    </script>
+</html>
