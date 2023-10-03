@@ -70,11 +70,35 @@ class Order(BaseModel):
         return self.data.price >= other.data.price
 
 
+class Orders(BaseModel):
+    order_created: list[Order] = list()
+    order_changed: list[Order] = list()
+    order_deleted: list[Order] = list()
+
+    def __getitem__(self, key):
+        try:
+            return getattr(self, key)
+        except:
+            super().__getitem__(key)
+
+    def __contains__(self, key):
+        try:
+            return hasattr(self, key)
+        except:
+            super().__getitem__(key)
+
+    def __setitem__(self, key, value):
+        try:
+            setattr(self, key, value)
+        except:
+            super().__getitem__(key)
+
+
 class App(object):
     def __init__(self, kafka_urls: str | list[str], topic: str, loop=None):
         self.loop = loop or asyncio.get_event_loop()
         self.task = None
-        self.best_orders = dict()
+        self.best_orders = Orders()
         self.on_best_orders_changes = AsyncSignal()
         self.configure_kafka(kafka_urls, topic)
 
@@ -92,19 +116,18 @@ class App(object):
 
         order = Order.parse_obj(message)
 
-        if order.event not in self.best_orders:
-            self.best_orders[order.event] = list()
+        if not self.best_orders[order.event]:
             self.best_orders[order.event].append(order)
-            return
+            await self.on_best_orders_changes.emit(self.best_orders)
 
-        if order > min(self.best_orders[order.event]):
+        elif order > min(self.best_orders[order.event]):
             if len(self.best_orders[order.event]) >= 10:
                 self.best_orders[order.event].pop()
 
             self.best_orders[order.event].append(order)
+            self.best_orders[order.event].sort(reverse=True)
 
-        self.best_orders[order.event].sort(reverse=True)
-        await self.on_best_orders_changes.emit(self.best_orders)
+            await self.on_best_orders_changes.emit(self.best_orders)
 
     async def run(self):
         await self.consumer.start()
