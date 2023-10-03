@@ -5,16 +5,11 @@ from fastapi.responses import HTMLResponse
 from fastapi.routing import APIRouter
 
 from config import *
+from app.models import OrdersEvents
 from services.websocket_manager import ConnectionManager
 
 router = APIRouter()
 ws_manager = ConnectionManager()
-
-
-class OrdersEvents(Enum):
-    ORDER_CREATED = "order_created"
-    ORDER_CHANGED = "order_changed"
-    ORDER_DELETED = "order_deleted"
 
 
 @router.get("/", response_class=HTMLResponse)
