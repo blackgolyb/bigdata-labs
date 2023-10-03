@@ -1,10 +1,12 @@
 import json
+import asyncio
 from enum import Enum, EnumMeta
 
 from pydantic import BaseModel
-from kafka import KafkaConsumer
+from aiokafka import AIOKafkaConsumer
 
 from config import *
+from services.signal import AsyncSignal
 
 
 class MetaEnum(EnumMeta):
@@ -64,18 +66,21 @@ class Order(BaseModel):
 
 
 class App(object):
-    def __init__(self, kafka_urls: str | list[str], topic: str):
+    def __init__(self, kafka_urls: str | list[str], topic: str, loop=None):
+        self.loop = loop or asyncio.get_event_loop()
+        self.task = None
         self.best_orders = dict()
+        self.on_best_orders_changes = AsyncSignal()
         self.configure_kafka(kafka_urls, topic)
 
     def configure_kafka(self, kafka_urls: str | list[str], topic: str):
-        self.consumer = KafkaConsumer(
+        self.consumer = AIOKafkaConsumer(
             topic,
             bootstrap_servers=kafka_urls,
             value_deserializer=lambda m: json.loads(m.decode("ascii")),
         )
 
-    def process_message(self, message: dict):
+    async def process_message(self, message: dict):
         event = message.get("event", None)
         if event not in OrdersEvents:
             return
@@ -94,16 +99,42 @@ class App(object):
             self.best_orders[order.event].append(order)
 
         self.best_orders[order.event].sort(reverse=True)
+        await self.on_best_orders_changes.emit(self.best_orders)
 
-    def start(self):
-        for message in self.consumer:
-            self.process_message(message.value)
+    async def run(self):
+        await self.consumer.start()
+        try:
+            async for message in self.consumer:
+                await self.process_message(message.value)
+        finally:
+            await self.consumer.stop()
+
+    async def start(self):
+        if self.task:
+            self.stop()
+
+        self.task = self.loop.create_task(self.run())
+
+    async def stop(self):
+        self.task.cancel()
+
+    async def __aenter__(self):
+        await self.start()
+
+    async def __aexit__(self, exc_type, exc_value, exc_traceback):
+        await self.stop()
 
 
-def main():
+async def log_data(data):
+    print(data)
+
+
+async def main():
     app = App(topic=KAFKA_TOPIC, kafka_urls=f"{KAFKA_HOST}:{KAFKA_PORT}")
-    app.start()
+    app.on_best_orders_changes.connect(log_data)
+    async with app:
+        await asyncio.sleep(10)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
