@@ -11,6 +11,7 @@ from aiokafka import AIOKafkaConsumer
 from config import *
 from app.api import router as control_router
 from services.signal import AsyncSignal
+from services.websocket_manager import ConnectionManager
 
 
 class MetaEnum(EnumMeta):
@@ -129,10 +130,6 @@ class App(object):
         await self.stop()
 
 
-async def log_data(data):
-    print(data)
-
-
 def configure_fastapi():
     # create instance of the app
     app = FastAPI(title="lab2-consumer", debug=DEBUG)
@@ -140,8 +137,8 @@ def configure_fastapi():
     app.include_router(control_router)
 
     origins = [
-        f"http://{HOST}:{PORT}",
-        f"ws://{HOST}:{PORT}",
+        f"http://{SERVER_HOST}:{SERVER_PORT}",
+        f"ws://{SERVER_HOST}:{SERVER_PORT}",
     ]
 
     app = CORSMiddleware(
@@ -157,7 +154,12 @@ def configure_fastapi():
 
 def configure_consumer_app():
     app = App(topic=KAFKA_TOPIC, kafka_urls=f"{KAFKA_HOST}:{KAFKA_PORT}")
-    app.on_best_orders_changes.connect(log_data)
+    ws = ConnectionManager()
+
+    async def broadcast(orders: Orders):
+        await ws.broadcast(orders.model_dump_json())
+
+    app.on_best_orders_changes.connect(broadcast)
 
     return app
 
@@ -166,7 +168,9 @@ async def main():
     fasapi_app = configure_fastapi()
     consumer_app = configure_consumer_app()
 
-    config = uvicorn.Config(fasapi_app, host=HOST, port=PORT, log_level="info")
+    config = uvicorn.Config(
+        fasapi_app, host=SERVER_HOST, port=SERVER_PORT, log_level="info"
+    )
     server = uvicorn.Server(config)
 
     async with consumer_app:

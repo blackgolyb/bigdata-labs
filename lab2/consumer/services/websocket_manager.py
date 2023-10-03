@@ -1,7 +1,9 @@
 from fastapi import WebSocket
 
+from services.singleton import SingletonMeta
 
-class ConnectionManager:
+
+class ConnectionManager(metaclass=SingletonMeta):
     def __init__(self):
         self.active_connections: list[WebSocket] = []
 
@@ -18,6 +20,3 @@ class ConnectionManager:
     async def broadcast(self, message: str):
         for connection in self.active_connections:
             await connection.send_text(message)
-
-
-ws_manager = ConnectionManager()
