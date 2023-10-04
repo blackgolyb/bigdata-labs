@@ -108,13 +108,18 @@ async def main():
     app = App()
 
     async with producer:
-        task = app.create_task(
+        app.create_task(
             channel=BITSTAMP_CHANNEL,
             message_receiver=producer.send_message,
         )
-        await asyncio.sleep(5)
 
-    app.stop_task(task)
+        if DEBUG:
+            await asyncio.sleep(10)
+
+        while not DEBUG:
+            await asyncio.sleep(1)
+
+    app.stop_all()
 
 
 if __name__ == "__main__":
