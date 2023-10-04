@@ -20,11 +20,6 @@
                 color: var(--font-color);
                 font-family: Inter, sans-serif;
                 font-style: normal;
-                /*font-weight: 500;
-
-                color: rgb(255, 255, 255);
-                font-size: 20px;
-                line-height: 32px;*/
             }
 
             :root {
@@ -35,6 +30,7 @@
                 --font-color: #fff;
 
                 --header-height: 60px;
+                --border-radius: 6px;
             }
 
             body {
@@ -88,7 +84,7 @@
             .category {
                 background-color: var(--elem-color);
                 border: 1px solid var(--border-color);
-                border-radius: 6px;
+                border-radius: var(--border-radius);
 
                 width: calc(33.3% - 25px);
                 /*padding: 10px 5px;*/
@@ -110,7 +106,7 @@
                 background-color: var(--border-color);
                 padding: 5px 0;
                 display: block;
-                border-radius: 6px 6px 0 0;
+                border-radius: var(--border-radius) var(--border-radius) 0 0;
             }
             /*.category hr {
                 margin: 10px 0;
@@ -132,6 +128,7 @@
                 display: flex;
                 flex-wrap: wrap;
                 margin-bottom: 3px;
+                border-radius: var(--border-radius);
             }
 
             .category ul li:hover,
@@ -160,7 +157,7 @@
                 display: none;
                 width: 100%;
                 height: max-content;
-                border-radius: 0 0 6px 6px;
+                border-radius: 0 0 var(--border-radius) var(--border-radius);
                 background-color: var(--bg-color);
                 white-space: break-spaces;
                 border: 1px solid var(--border-color);

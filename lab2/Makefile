@@ -7,10 +7,10 @@ down:
 	docker compose -f docker-compose-local.yaml down --remove-orphans
 
 up_deploy:
-	docker compose -f docker-compose-deploy.yaml up -d
+	docker compose -f docker-compose-deploy.yaml --env-file ./.env.default up -d
 
 up_deploy_rebuild:
-	docker compose -f docker-compose-deploy.yaml up --build -d
+	docker compose -f docker-compose-deploy.yaml --env-file ./.env.default up --build -d
 
 down_deploy:
-	docker compose -f docker-compose-deploy.yaml down --remove-orphans
+	docker compose -f docker-compose-deploy.yaml --env-file ./.env.default down --remove-orphans

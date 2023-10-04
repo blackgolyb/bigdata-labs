@@ -1,26 +1,33 @@
-ARG BASE_IMAGE=python:3.11-slim-buster
-FROM $BASE_IMAGE
+# Set python version
+ARG BASE_CONTAINER=python:3.11
 
-# system update & package install
-RUN apt-get -y update && \
-    apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    postgresql-client \
-    openssl libssl-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
+# Set the base image 
+FROM --platform=linux/amd64 $BASE_CONTAINER
+
+# dont write pyc files
+ENV PYTHONDONTWRITEBYTECODE 1
+# dont buffer to stdout/stderr
+ENV PYTHONUNBUFFERED 1
+
+# Sets the user name to use when running the image.
+USER root
+RUN apt update && \
+    apt install --no-install-recommends -y build-essential gcc && \
+    apt clean && rm -rf /var/lib/apt/lists/* \
     && pip install poetry \
     && poetry config virtualenvs.in-project true
 
-COPY . .
-WORKDIR .
 
-# pip & requirements
+# Make a directory for app
+WORKDIR /consumer
+
+# Install dependencies
+COPY ./poetry.lock ./pyproject.toml ./
+
 RUN poetry install --only main
 
-# RUN adduser app -DHh . -u 1000
-# USER 1000
+# Copy source code
+COPY . .
 
-# Execute
+# Run the application
 CMD ["./.venv/bin/python", "main.py"]

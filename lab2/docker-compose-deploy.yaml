@@ -28,12 +28,18 @@ services:
             KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
             KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
             KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+            KAFKA_CREATE_TOPICS: "${KAFKA_TOPIC}:1:1"
             # KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
             # KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
             # KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
             # KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
             # KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
             # KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+        healthcheck:
+            test: nc -z localhost 29092 || exit
+            interval: 10s
+            timeout: 5s
+            retries: 15
 
     kafdrop:
         image: obsidiandynamics/kafdrop:latest
@@ -51,14 +57,15 @@ services:
         container_name: lab2-producer
         image: lab2-producer
         depends_on:
-            - zookeeper
-            - kafka
+            kafka:
+                condition: service_healthy
         build:
             context: ./producer
             dockerfile: Dockerfile
         environment:
             - KAFKA_HOST=kafka
             - KAFKA_PORT=29092
+            - KAFKA_TOPIC=${KAFKA_TOPIC}
             - DEBUG=False
         networks:
             - broker-kafka
@@ -67,15 +74,17 @@ services:
         container_name: lab2-consumer
         image: lab2-consumer
         depends_on:
-            - zookeeper
-            - kafka
-            - producer
+            kafka:
+                condition: service_healthy
+            producer:
+                condition: service_started
         build:
             context: ./consumer
             dockerfile: Dockerfile
         environment:
             - KAFKA_HOST=kafka
             - KAFKA_PORT=29092
+            - KAFKA_TOPIC=${KAFKA_TOPIC}
             - DEBUG=False
         ports:
             - 8080:8080
