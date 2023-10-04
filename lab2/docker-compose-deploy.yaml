@@ -1,0 +1,87 @@
+version: "3"
+services:
+    zookeeper:
+        container_name: lab2-zookeeper
+        image: confluentinc/cp-zookeeper:latest
+        networks:
+            - broker-kafka
+        ports:
+            - "2181:2181"
+        environment:
+            ZOOKEEPER_CLIENT_PORT: 2181
+            ZOOKEEPER_TICK_TIME: 2000
+
+    kafka:
+        container_name: lab2-kafka
+        image: confluentinc/cp-kafka:latest
+        networks:
+            - broker-kafka
+        depends_on:
+            - zookeeper
+        ports:
+            - "9092:9092"
+            - "9101:9101"
+        environment:
+            KAFKA_BROKER_ID: 1
+            KAFKA_ADVERTISED_HOST_NAME: kafka:9092
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+            KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+            # KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+            # KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+            # KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+            # KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+            # KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+            # KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+    kafdrop:
+        image: obsidiandynamics/kafdrop:latest
+        networks:
+            - broker-kafka
+        depends_on:
+            - kafka
+            - zookeeper
+        ports:
+            - 19000:9000
+        environment:
+            KAFKA_BROKERCONNECT: kafka:29092
+
+    producer:
+        container_name: lab2-producer
+        image: lab2-producer
+        depends_on:
+            - zookeeper
+            - kafka
+        build:
+            context: ./producer
+            dockerfile: Dockerfile
+        environment:
+            - KAFKA_HOST=kafka
+            - KAFKA_PORT=29092
+            - DEBUG=False
+        networks:
+            - broker-kafka
+
+    consumer:
+        container_name: lab2-consumer
+        image: lab2-consumer
+        depends_on:
+            - zookeeper
+            - kafka
+            - producer
+        build:
+            context: ./consumer
+            dockerfile: Dockerfile
+        environment:
+            - KAFKA_HOST=kafka
+            - KAFKA_PORT=29092
+            - DEBUG=False
+        ports:
+            - 8080:8080
+        networks:
+            - broker-kafka
+
+networks:
+    broker-kafka:
+        driver: bridge

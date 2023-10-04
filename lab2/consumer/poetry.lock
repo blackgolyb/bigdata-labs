@@ -114,6 +114,19 @@ files = [
 ]
 
 [[package]]
+name = "envparse"
+version = "0.2.0"
+description = "Simple environment variable parsing"
+optional = false
+python-versions = "*"
+files = [
+    {file = "envparse-0.2.0.tar.gz", hash = "sha256:4f3b9a27bb55d27f124eb4adf006fec05e4588891c9a054a183a112645056eb7"},
+]
+
+[package.extras]
+testing = ["pytest"]
+
+[[package]]
 name = "fastapi"
 version = "0.103.2"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
@@ -532,4 +545,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "8c83bf54d79b4a0c76696cbef97b5f3aa5e5a9278d58d0ef00308f75a8b60982"
+content-hash = "d76dbb1d31a15f976f661aff8109b247da7399eb37b478afa37472f184ad7cf5"
