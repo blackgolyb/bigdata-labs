@@ -1,6 +1,6 @@
 # Лабораторна робота 2 (Kafka)
 
-![](./public/)
+![preview](./public/preview.gif)
 
 ## Run production version
 
