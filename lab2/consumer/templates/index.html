@@ -6,11 +6,213 @@
             name="viewport"
             content="width=device-width, initial-scale=1.0"
         />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css"
+        />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
         <title>Consumer UI</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                color: var(--font-color);
+                font-family: Inter, sans-serif;
+                font-style: normal;
+                /*font-weight: 500;
+
+                color: rgb(255, 255, 255);
+                font-size: 20px;
+                line-height: 32px;*/
+            }
+
+            :root {
+                --bg-color: #0b0d0e;
+                --elem-color: #171a1c;
+                --border-color: #394246;
+                --icon-color: #abb5ba;
+                --font-color: #fff;
+
+                --header-height: 60px;
+            }
+
+            body {
+                background-color: var(--bg-color);
+            }
+
+            svg {
+                fill: var(--icon-color);
+                path: var(--icon-color);
+                width: 30px;
+                height: 30px;
+            }
+
+            .header {
+                height: var(--header-height);
+                background-color: var(--elem-color);
+                /*border-bottom: 1px solid var(--border-color);*/
+
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 30px;
+            }
+
+            .logo {
+                font-size: large;
+                text-decoration: none;
+            }
+            .logo a {
+                text-decoration: inherit;
+            }
+
+            .main {
+                width: 80%;
+                position: relative;
+                margin: 0 auto;
+                padding: 30px 0;
+                box-sizing: border-box;
+                height: calc(100vh - var(--header-height));
+            }
+
+            #content {
+                display: flex;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 25px;
+
+                height: max-content;
+                min-height: 50vh;
+            }
+
+            .category {
+                background-color: var(--elem-color);
+                border: 1px solid var(--border-color);
+                border-radius: 6px;
+
+                width: calc(33.3% - 25px);
+                /*padding: 10px 5px;*/
+
+                display: flex;
+                justify-self: start;
+                flex-direction: column;
+
+                /*box-shadow: 2px 1px 4px 0px var(--border-color);*/
+            }
+
+            .category__title {
+                text-align: center;
+                font-size: large;
+                width: 100%;
+                background-color: var(--border-color);
+                padding: 5px 0;
+                display: block;
+                border-radius: 6px 6px 0 0;
+            }
+            /*.category hr {
+                margin: 10px 0;
+                color: var(--border-color);
+                height: 2px;
+            }*/
+
+            .category hr {
+                margin: 10px 0;
+                color: var(--border-color);
+            }
+
+            .category ul {
+                list-style-type: none;
+                padding: 20px 20px;
+            }
+
+            .category ul li {
+                display: flex;
+                flex-wrap: wrap;
+                margin-bottom: 3px;
+            }
+
+            .category ul li:hover,
+            .category ul li:focus {
+                cursor: pointer;
+                background-color: var(--border-color);
+            }
+
+            .category ul hr {
+                margin: 5px 0;
+                color: var(--border-color);
+                height: 1px;
+            }
+
+            .order-number {
+                text-align: left; /* Вирівнюємо текст по правому краю */
+                padding-right: 20px;
+                flex: 0 0 50px; /* Додаємо відступ від правого краю номера */
+            }
+
+            .order-label {
+                flex: 1; /* Займає залишок доступного простору */
+            }
+
+            .order-data {
+                display: none;
+                width: 100%;
+                height: max-content;
+                border-radius: 0 0 6px 6px;
+                background-color: var(--bg-color);
+                white-space: break-spaces;
+                border: 1px solid var(--border-color);
+                padding: 10px;
+                border-top: none;
+            }
+
+            .order-data.details {
+                display: block;
+            }
+
+            /*JSON*/
+            .string {
+                color: green;
+            }
+            .number {
+                color: darkorange;
+            }
+            .boolean {
+                color: blue;
+            }
+            .null {
+                color: magenta;
+            }
+            .key {
+                color: red;
+            }
+        </style>
     </head>
     <body>
-        <header class="header"></header>
-        <div id="content"></div>
+        <header class="header">
+            <div class="logo">
+                <a
+                    href="https://github.com/blackgolyb/bigdata-labs/tree/main/lab2"
+                >
+                    <b>Consumer UI</b>
+                </a>
+            </div>
+            <a href="https://github.com/blackgolyb/bigdata-labs/tree/main/lab2">
+                <svg
+                    class="github-icon"
+                    viewBox="0 0 1024 1024"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <path
+                        fill-rule="evenodd"
+                        clip-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8C0 11.54 2.29 14.53 5.47 15.59C5.87 15.66 6.02 15.42 6.02 15.21C6.02 15.02 6.01 14.39 6.01 13.72C4 14.09 3.48 13.23 3.32 12.78C3.23 12.55 2.84 11.84 2.5 11.65C2.22 11.5 1.82 11.13 2.49 11.12C3.12 11.11 3.57 11.7 3.72 11.94C4.44 13.15 5.59 12.81 6.05 12.6C6.12 12.08 6.33 11.73 6.56 11.53C4.78 11.33 2.92 10.64 2.92 7.58C2.92 6.71 3.23 5.99 3.74 5.43C3.66 5.23 3.38 4.41 3.82 3.31C3.82 3.31 4.49 3.1 6.02 4.13C6.66 3.95 7.34 3.86 8.02 3.86C8.7 3.86 9.38 3.95 10.02 4.13C11.55 3.09 12.22 3.31 12.22 3.31C12.66 4.41 12.38 5.23 12.3 5.43C12.81 5.99 13.12 6.7 13.12 7.58C13.12 10.65 11.25 11.33 9.47 11.53C9.76 11.78 10.01 12.26 10.01 13.01C10.01 14.08 10 14.94 10 15.21C10 15.42 10.15 15.67 10.55 15.59C13.71 14.53 16 11.53 16 8C16 3.58 12.42 0 8 0Z"
+                        transform="scale(64)"
+                    ></path>
+                </svg>
+            </a>
+        </header>
+        <div class="main"><div id="content"></div></div>
     </body>
     <script>
         const ws = new WebSocket(`ws://${location.host}/ws`, "echo-protocol");
@@ -27,9 +229,58 @@
             }
         };
 
-        const Order = (orderData) => {
+        function syntaxHighlight(json) {
+            if (typeof json != "string") {
+                json = JSON.stringify(json, undefined, 2);
+            }
+            json = json
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+            return json.replace(
+                /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+                function (match) {
+                    var cls = "number";
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) {
+                            cls = "key";
+                        } else {
+                            cls = "string";
+                        }
+                    } else if (/true|false/.test(match)) {
+                        cls = "boolean";
+                    } else if (/null/.test(match)) {
+                        cls = "null";
+                    }
+                    return '<span class="' + cls + '">' + match + "</span>";
+                },
+            );
+        }
+
+        const Order = (id, orderData) => {
             const self = document.createElement("li");
-            self.innerHTML = orderData.data.price;
+
+            const number = document.createElement("span");
+            number.classList.add("order-number");
+            number.textContent = id;
+
+            const label = document.createElement("span");
+            label.classList.add("order-label");
+            label.textContent = orderData.data.price;
+
+            const data = document.createElement("pre");
+            data.classList.add("order-data");
+            data.innerHTML = syntaxHighlight(
+                JSON.stringify(orderData, null, 2),
+            );
+
+            self.appendChild(number);
+            self.appendChild(label);
+            self.appendChild(data);
+            self.onclick = (e) => {
+                data.classList.toggle("details");
+            };
+
             return self;
         };
 
@@ -39,19 +290,42 @@
             self.uploadOrders = (orders) => {
                 self.innerHTML = "";
 
-                orders.forEach((orderData) => {
-                    self.appendChild(Order(orderData));
-                });
+                const li = document.createElement("li");
+                const number = document.createElement("span");
+                number.classList.add("order-number");
+                number.innerHTML = "<b>id</b>";
+
+                const label = document.createElement("span");
+                label.classList.add("order-label");
+                label.innerHTML = "<b>Price</b>";
+
+                li.appendChild(number);
+                li.appendChild(label);
+                self.appendChild(li);
+                self.appendChild(document.createElement("hr"));
+
+                for (let i = 0; i < orders.length; i++) {
+                    const orderData = orders[i];
+                    self.appendChild(Order(i + 1, orderData));
+                }
             };
 
             return self;
         };
 
         const CategoryComponent = (category) => {
-            const self = document.createElement("div", {
-                id: category,
-            });
-            self.innerHTML = category;
+            const self = document.createElement("div");
+
+            self.setAttribute("id", category);
+            self.classList.add("category");
+
+            const title = document.createElement("span");
+            title.classList.add("category__title");
+            title.innerHTML = category;
+            //title.innerHTML = `<b>${category}</b>`;
+            self.appendChild(title);
+            //self.appendChild(document.createElement("hr"));
+
             self.listOfOrders = ListOfOrders();
             self.appendChild(self.listOfOrders);
             return self;
