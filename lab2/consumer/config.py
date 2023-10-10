@@ -4,6 +4,7 @@ from envparse import Env
 env = Env()
 
 DEBUG = env.bool("DEBUG", default=True)
+LOGGING = env.bool("LOGGING", default=False)
 
 KAFKA_HOST = env.str("KAFKA_HOST", default="0.0.0.0")
 KAFKA_PORT = env.int("KAFKA_PORT", default=29092)

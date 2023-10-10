@@ -1,5 +1,7 @@
 import asyncio
 
+import logging
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +14,9 @@ from app.models import Orders
 from services.websocket_manager import ConnectionManager
 
 
+logger = logging.getLogger("uvicorn")
+
+
 def configure_fastapi():
     app = FastAPI(title="lab2-consumer", debug=DEBUG)
 
@@ -19,7 +24,9 @@ def configure_fastapi():
 
     origins = [
         f"http://{SERVER_HOST}:{SERVER_PORT}",
+        f"https://{SERVER_HOST}:{SERVER_PORT}",
         f"ws://{SERVER_HOST}:{SERVER_PORT}",
+        f"wss://{SERVER_HOST}:{SERVER_PORT}",
     ]
 
     app = CORSMiddleware(
@@ -41,6 +48,18 @@ def configure_consumer_app():
         await ws.broadcast(orders.model_dump_json())
 
     app.on_best_orders_changes.connect(broadcast)
+
+    if LOGGING:
+
+        async def log_info(orders: Orders):
+            for order_type in ["order_created", "order_changed", "order_deleted"]:
+                table = ""
+                for order in orders[order_type]:
+                    table += f"price: {order.data.price}\tid: {order.data.id}\n"
+
+                logger.info(f"{order_type}: \n{table}")
+
+        app.on_best_orders_changes.connect(log_info)
 
     return app
 
